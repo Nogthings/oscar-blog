@@ -39,12 +39,13 @@ function BlogApp() {
     createPost, 
     updatePost, 
     deletePost,
-    error 
+    error
   } = usePosts()
   const { hasConsent } = useCookieConsent()
 
   const [currentView, setCurrentView] = useState<View>('home')
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
+  const [isSubmittingPost, setIsSubmittingPost] = useState(false)
 
   const handleCreatePost = () => {
     setSelectedPost(null)
@@ -78,15 +79,22 @@ function BlogApp() {
     data: { title: string; excerpt: string; content: string; slug: string; cover_image?: string },
     published: boolean
   ) => {
+    setIsSubmittingPost(true)
     try {
       if (selectedPost) {
         await updatePost(selectedPost.id, { ...data, published })
       } else {
         await createPost({ ...data, published })
       }
+      // Only navigate if successful
       setCurrentView('home')
+      setSelectedPost(null)
     } catch (error) {
+      console.error('Error submitting post:', error)
+      // Re-throw so PostForm can handle the error
       throw error
+    } finally {
+      setIsSubmittingPost(false)
     }
   }
 
@@ -189,6 +197,7 @@ function BlogApp() {
             post={selectedPost || undefined}
             onSubmit={handlePostSubmit}
             onCancel={handleBackToHome}
+            isLoading={isSubmittingPost}
           />
         )}
 

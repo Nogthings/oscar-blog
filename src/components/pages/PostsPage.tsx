@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PostCard } from '@/components/ui/PostCard'
@@ -7,13 +7,10 @@ import { LoadingProgress } from '@/components/ui/LoadingProgress'
 import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
 import { 
   Search, 
-  Filter, 
-  SlidersHorizontal,
   Grid3X3,
   List,
   BookOpen,
   TrendingUp,
-  Clock,
   Users,
   ChevronDown,
   X
@@ -48,7 +45,6 @@ export function PostsPage({ posts, onReadPost, onCreatePost, loading, isAuthenti
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title' | 'trending'>('newest')
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [showFilters, setShowFilters] = useState(false)
 
   const publishedPosts = posts.filter(post => post.published)
   
@@ -82,7 +78,7 @@ export function PostsPage({ posts, onReadPost, onCreatePost, loading, isAuthenti
     hasMoreItems,
     progress,
     loadingRef
-  } = useInfiniteScroll({
+  } = useInfiniteScroll<Post>({
     items: sortedPosts,
     itemsPerPage: 12,
     hasMore: true

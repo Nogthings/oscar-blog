@@ -70,8 +70,6 @@ export function usePosts() {
 
       if (error) throw error
 
-      console.log('Fetched posts:', data)
-      console.log('First post profile:', data?.[0]?.profiles)
 
       setPosts(data || [])
     } catch (error) {
@@ -111,19 +109,7 @@ export function usePosts() {
   }
 
   const createPost = async (postData: Omit<PostInsert, 'author_id'>) => {
-    console.log('Creating post with data:', postData)
     if (!user) throw new Error('User not authenticated')
-
-    // First, ensure the user has a profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, full_name')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile) {
-      throw new Error('User profile not found. Please refresh and try again.')
-    }
 
     // Clean the data - remove empty cover_image
     const cleanPostData = { ...postData }
@@ -135,8 +121,6 @@ export function usePosts() {
       ...cleanPostData,
       author_id: user.id,
     }
-
-    console.log('Inserting to database:', insertData)
 
     const { data, error } = await supabase
       .from('posts')
@@ -150,19 +134,13 @@ export function usePosts() {
       `)
       .single()
 
-    if (error) {
-      console.error('Database insert error:', error)
-      throw error
-    }
+    if (error) throw error
 
-    console.log('Post created successfully:', data)
     setPosts((prev) => [data, ...prev])
     return data
   }
 
   const updatePost = async (id: string, postData: PostUpdate) => {
-    console.log('Updating post with data:', { id, postData })
-    
     // Clean the data - remove empty cover_image
     const cleanPostData = { ...postData }
     if (cleanPostData.cover_image === '' || cleanPostData.cover_image === null) {
@@ -182,12 +160,8 @@ export function usePosts() {
       `)
       .single()
 
-    if (error) {
-      console.error('Database update error:', error)
-      throw error
-    }
+    if (error) throw error
 
-    console.log('Post updated successfully:', data)
     setPosts((prev) =>
       prev.map((post) => (post.id === id ? data : post))
     )
@@ -228,6 +202,7 @@ export function usePosts() {
     fetchPosts()
   }, [])
 
+
   return {
     posts,
     loading,
@@ -237,6 +212,6 @@ export function usePosts() {
     createPost,
     updatePost,
     deletePost,
-    getPostBySlug,
+    getPostBySlug
   }
 }

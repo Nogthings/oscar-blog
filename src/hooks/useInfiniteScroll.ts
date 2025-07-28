@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 
-interface UseInfiniteScrollProps {
-  items: any[]
+interface UseInfiniteScrollProps<T> {
+  items: T[]
   itemsPerPage?: number
   hasMore?: boolean
   onLoadMore?: () => void
@@ -12,7 +12,7 @@ export function useInfiniteScroll<T>({
   itemsPerPage = 12, 
   hasMore = true,
   onLoadMore 
-}: UseInfiniteScrollProps) {
+}: UseInfiniteScrollProps<T>) {
   const [displayedItems, setDisplayedItems] = useState<T[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [page, setPage] = useState(1)

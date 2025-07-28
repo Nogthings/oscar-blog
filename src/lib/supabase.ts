@@ -27,6 +27,7 @@ export type Database = {
           slug: string
           author_id: string
           published: boolean
+          cover_image?: string
           created_at: string
           updated_at: string
         }
@@ -38,6 +39,7 @@ export type Database = {
           slug: string
           author_id: string
           published?: boolean
+          cover_image?: string
           created_at?: string
           updated_at?: string
         }
@@ -49,6 +51,7 @@ export type Database = {
           slug?: string
           author_id?: string
           published?: boolean
+          cover_image?: string
           created_at?: string
           updated_at?: string
         }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -41,7 +41,8 @@ interface PostFormProps {
 }
 
 export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps) {
-  const [isSaving, setIsSaving] = useState(false)
+  // Determine if form is processing
+  const isProcessing = isLoading
   
   const {
     register,
@@ -79,16 +80,12 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
   }, [title, setValue, post])
 
   const handleFormSubmit = async (data: PostForm, published: boolean) => {
-    console.log('Form submitting with data:', data)
-    setIsSaving(true)
     try {
       await onSubmit(data, published)
-      console.log('Form submitted successfully')
     } catch (error) {
       console.error('Form submission error:', error)
-      throw error
-    } finally {
-      setIsSaving(false)
+      // Show error to user
+      alert('Error al publicar el post. Por favor, inténtalo de nuevo.')
     }
   }
 
@@ -108,7 +105,7 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
                 id="title"
                 placeholder="Título del post"
                 {...register('title')}
-                disabled={isSaving || isLoading}
+                disabled={isProcessing}
               />
               {errors.title && (
                 <p className="text-sm text-red-600">{errors.title.message}</p>
@@ -121,7 +118,7 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
                 id="slug"
                 placeholder="url-del-post"
                 {...register('slug')}
-                disabled={isSaving || isLoading}
+                disabled={isProcessing}
               />
               {errors.slug && (
                 <p className="text-sm text-red-600">{errors.slug.message}</p>
@@ -136,7 +133,7 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
               type="url"
               placeholder="https://ejemplo.com/imagen.jpg"
               {...register('cover_image')}
-              disabled={isSaving || isLoading}
+              disabled={isProcessing}
             />
             {errors.cover_image && (
               <p className="text-sm text-red-600">{errors.cover_image.message}</p>
@@ -153,7 +150,7 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
               placeholder="Breve descripción del post..."
               rows={3}
               {...register('excerpt')}
-              disabled={isSaving || isLoading}
+              disabled={isProcessing}
             />
             {errors.excerpt && (
               <p className="text-sm text-red-600">{errors.excerpt.message}</p>
@@ -171,7 +168,7 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
                   onChange={field.onChange}
                   placeholder="Escribe el contenido de tu post aquí usando Markdown..."
                   height={500}
-                  disabled={isSaving || isLoading}
+                  disabled={isProcessing}
                 />
               )}
             />
@@ -195,26 +192,26 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
               type="button"
               onClick={handleSubmit((data) => handleFormSubmit(data, false))}
               variant="outline"
-              disabled={isSaving || isLoading}
+              disabled={isProcessing}
               className="flex-1"
             >
-              {isSaving ? 'Guardando...' : 'Guardar como Borrador'}
+              {isProcessing ? 'Guardando...' : 'Guardar como Borrador'}
             </Button>
             
             <Button
               type="button"
               onClick={handleSubmit((data) => handleFormSubmit(data, true))}
-              disabled={isSaving || isLoading}
+              disabled={isProcessing}
               className="flex-1"
             >
-              {isSaving ? 'Publicando...' : 'Publicar'}
+              {isProcessing ? 'Publicando...' : 'Publicar'}
             </Button>
             
             <Button
               type="button"
               onClick={onCancel}
               variant="ghost"
-              disabled={isSaving || isLoading}
+              disabled={isProcessing}
             >
               Cancelar
             </Button>
