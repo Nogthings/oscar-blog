@@ -24,11 +24,12 @@ interface HomePageProps {
   posts: Post[]
   onReadPost: (post: Post) => void
   onCreatePost: () => void
+  onNavigatePosts?: () => void
   loading?: boolean
   isAuthenticated?: boolean
 }
 
-export function HomePage({ posts, onReadPost, onCreatePost, loading, isAuthenticated = false }: HomePageProps) {
+export function HomePage({ posts, onReadPost, onCreatePost, onNavigatePosts, loading, isAuthenticated = false }: HomePageProps) {
   const [showAllPosts, setShowAllPosts] = useState(false)
   
   const displayedPosts = showAllPosts ? posts : posts.slice(0, 8)
@@ -49,7 +50,12 @@ export function HomePage({ posts, onReadPost, onCreatePost, loading, isAuthentic
               <PenTool className="w-5 h-5" />
               {isAuthenticated ? 'Escribir Artículo' : 'Iniciar Sesión para Escribir'}
             </Button>
-            <Button variant="outline" size="lg" className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={onNavigatePosts}
+              className="flex items-center gap-2"
+            >
               <BookOpen className="w-5 h-5" />
               Explorar Posts
             </Button>
@@ -108,6 +114,7 @@ export function HomePage({ posts, onReadPost, onCreatePost, loading, isAuthentic
         <BentoGrid 
           posts={displayedPosts} 
           onReadPost={onReadPost} 
+          onCreatePost={onCreatePost}
           loading={loading}
         />
       </div>

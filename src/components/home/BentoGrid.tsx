@@ -23,10 +23,11 @@ type Post = {
 interface BentoGridProps {
   posts: Post[]
   onReadPost: (post: Post) => void
+  onCreatePost: () => void
   loading?: boolean
 }
 
-export function BentoGrid({ posts, onReadPost, loading }: BentoGridProps) {
+export function BentoGrid({ posts, onReadPost, onCreatePost, loading }: BentoGridProps) {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -178,6 +179,7 @@ export function BentoGrid({ posts, onReadPost, loading }: BentoGridProps) {
           <Button 
             variant="secondary" 
             size="sm"
+            onClick={onCreatePost}
             className="bg-white text-blue-600 hover:bg-gray-100"
           >
             Escribir Post

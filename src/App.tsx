@@ -160,6 +160,7 @@ function BlogApp() {
       onNavigateAbout={handleNavigateAbout}
       onNavigatePrivacy={handleNavigatePrivacy}
       onNavigateTerms={handleNavigateTerms}
+      currentView={currentView}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
@@ -173,6 +174,7 @@ function BlogApp() {
             posts={posts}
             onReadPost={handleViewPost}
             onCreatePost={user ? handleCreatePost : () => setCurrentView('login')}
+            onNavigatePosts={handleNavigatePosts}
             loading={postsLoading}
             isAuthenticated={!!user}
           />
