@@ -1,14 +1,22 @@
-import { useState } from 'react'
-import { Card, CardContent } from '@/components/ui/card'
+import { useState, useEffect, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PostCard } from '@/components/ui/PostCard'
+import { PostsSkeletonGrid } from '@/components/ui/PostSkeleton'
+import { LoadingProgress } from '@/components/ui/LoadingProgress'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
 import { 
   Search, 
   Filter, 
-  Calendar, 
-  User, 
-  Eye,
-  BookOpen
+  SlidersHorizontal,
+  Grid3X3,
+  List,
+  BookOpen,
+  TrendingUp,
+  Clock,
+  Users,
+  ChevronDown,
+  X
 } from 'lucide-react'
 
 type Post = {
@@ -38,7 +46,9 @@ interface PostsPageProps {
 
 export function PostsPage({ posts, onReadPost, onCreatePost, loading, isAuthenticated }: PostsPageProps) {
   const [searchTerm, setSearchTerm] = useState('')
-  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title'>('newest')
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title' | 'trending'>('newest')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [showFilters, setShowFilters] = useState(false)
 
   const publishedPosts = posts.filter(post => post.published)
   
@@ -56,202 +66,264 @@ export function PostsPage({ posts, onReadPost, onCreatePost, loading, isAuthenti
         return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       case 'title':
         return a.title.localeCompare(b.title)
+      case 'trending':
+        // Simulate trending by combining recency and content length
+        const aScore = new Date(a.created_at).getTime() + a.content.length
+        const bScore = new Date(b.created_at).getTime() + b.content.length
+        return bScore - aScore
       default:
         return 0
     }
   })
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
+  const {
+    displayedItems: displayedPosts,
+    isLoading: infiniteLoading,
+    hasMoreItems,
+    progress,
+    loadingRef
+  } = useInfiniteScroll({
+    items: sortedPosts,
+    itemsPerPage: 12,
+    hasMore: true
+  })
+
+  const scrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [])
+
+  const clearSearch = () => {
+    setSearchTerm('')
   }
 
-  if (loading) {
+  if (loading && posts.length === 0) {
     return (
       <div className="space-y-8">
+        {/* Header Skeleton */}
         <div className="text-center space-y-4">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-48 mx-auto mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-96 mx-auto"></div>
+          <div className="h-12 bg-gray-200 rounded w-96 mx-auto animate-pulse" />
+          <div className="h-6 bg-gray-200 rounded w-64 mx-auto animate-pulse" />
+        </div>
+        
+        {/* Controls Skeleton */}
+        <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+          <div className="h-10 bg-gray-200 rounded w-80 animate-pulse" />
+          <div className="flex gap-2">
+            <div className="h-10 w-32 bg-gray-200 rounded animate-pulse" />
+            <div className="h-10 w-20 bg-gray-200 rounded animate-pulse" />
           </div>
         </div>
-        <div className="grid gap-6">
-          {[...Array(6)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
-                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-                <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        
+        {/* Posts Skeleton */}
+        <PostsSkeletonGrid count={8} />
       </div>
     )
   }
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="text-center space-y-6 py-12 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl">
-        <div className="max-w-3xl mx-auto space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Todos los Posts
+      {/* Hero Section */}
+      <div className="text-center space-y-6 py-16 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl">
+        <div className="max-w-4xl mx-auto space-y-4">
+          <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            Explora Todos los Posts
           </h1>
-          <p className="text-lg text-gray-600 leading-relaxed">
-            Explora nuestra colección completa de artículos sobre tecnología, desarrollo y más
+          <p className="text-xl text-gray-600 leading-relaxed">
+            Descubre historias increíbles, tutoriales y reflexiones de nuestra comunidad de escritores
           </p>
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
-            <BookOpen className="w-4 h-4" />
-            <span>{publishedPosts.length} artículos publicados</span>
+          
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto pt-8">
+            <div className="text-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-2">
+                <BookOpen className="w-6 h-6 text-blue-600" />
+              </div>
+              <div className="text-2xl font-bold text-gray-900">{publishedPosts.length}</div>
+              <div className="text-sm text-gray-600">Posts Publicados</div>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-full mx-auto mb-2">
+                <Users className="w-6 h-6 text-green-600" />
+              </div>
+              <div className="text-2xl font-bold text-gray-900">
+                {new Set(publishedPosts.map(p => p.author_id)).size}
+              </div>
+              <div className="text-sm text-gray-600">Autores Activos</div>
+            </div>
+            <div className="text-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-full mx-auto mb-2">
+                <TrendingUp className="w-6 h-6 text-purple-600" />
+              </div>
+              <div className="text-2xl font-bold text-gray-900">
+                {publishedPosts.reduce((acc, post) => acc + Math.ceil(post.content.split(' ').length / 200), 0)}
+              </div>
+              <div className="text-sm text-gray-600">Min de Lectura</div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            type="text"
-            placeholder="Buscar posts..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as 'newest' | 'oldest' | 'title')}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="newest">Más recientes</option>
-            <option value="oldest">Más antiguos</option>
-            <option value="title">Por título</option>
-          </select>
-        </div>
-      </div>
+      {/* Search and Controls */}
+      <div className="space-y-4">
+        {/* Main Controls */}
+        <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
+          {/* Search */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Input
+              type="text"
+              placeholder="Buscar posts, autores..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-10 h-12 text-lg"
+            />
+            {searchTerm && (
+              <button
+                onClick={clearSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
 
-      {/* Results Summary */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-gray-600">
-          {searchTerm && (
-            <>Mostrando {sortedPosts.length} de {publishedPosts.length} posts para "{searchTerm}"</>
-          )}
-          {!searchTerm && (
-            <>Mostrando {sortedPosts.length} posts</>
-          )}
-        </p>
-        
-        {isAuthenticated && (
-          <Button onClick={onCreatePost} className="gap-2">
-            <BookOpen className="w-4 h-4" />
-            Nuevo Post
-          </Button>
-        )}
+          {/* Controls */}
+          <div className="flex items-center gap-3">
+            {/* Sort Dropdown */}
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="newest">Más Recientes</option>
+                <option value="oldest">Más Antiguos</option>
+                <option value="trending">Trending</option>
+                <option value="title">Por Título</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            </div>
+
+            {/* View Mode Toggle */}
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded transition-colors ${
+                  viewMode === 'grid' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <Grid3X3 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded transition-colors ${
+                  viewMode === 'list' 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Create Post Button */}
+            {isAuthenticated && (
+              <Button onClick={onCreatePost} className="gap-2 whitespace-nowrap">
+                <BookOpen className="w-4 h-4" />
+                Nuevo Post
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Results Summary */}
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <div>
+            {searchTerm ? (
+              <span>
+                Mostrando {displayedPosts.length} de {sortedPosts.length} posts para "{searchTerm}"
+              </span>
+            ) : (
+              <span>
+                Mostrando {displayedPosts.length} de {sortedPosts.length} posts
+              </span>
+            )}
+          </div>
+          <div className="text-gray-400">
+            Carga automática activada
+          </div>
+        </div>
       </div>
 
       {/* Posts Grid */}
       {sortedPosts.length === 0 ? (
-        <Card className="p-12 text-center">
+        <div className="text-center py-20">
           <div className="space-y-4">
-            <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto flex items-center justify-center">
-              <Search className="w-8 h-8 text-gray-400" />
+            <div className="w-20 h-20 bg-gray-100 rounded-full mx-auto flex items-center justify-center">
+              <Search className="w-10 h-10 text-gray-400" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {searchTerm ? 'No se encontraron posts' : 'No hay posts disponibles'}
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-gray-600 mb-6">
                 {searchTerm 
                   ? `No hay posts que coincidan con "${searchTerm}"`
                   : 'Aún no hay posts publicados en el blog'
                 }
               </p>
               {searchTerm && (
-                <Button 
-                  variant="outline" 
-                  onClick={() => setSearchTerm('')}
-                >
+                <Button variant="outline" onClick={clearSearch}>
                   Limpiar búsqueda
                 </Button>
               )}
             </div>
           </div>
-        </Card>
+        </div>
       ) : (
-        <div className="grid gap-6">
-          {sortedPosts.map((post) => (
-            <Card key={post.id} className="hover:shadow-lg transition-shadow duration-200 group">
-              <CardContent className="p-0">
-                <div className="flex flex-col md:flex-row">
-                  {/* Cover Image */}
-                  {post.cover_image && (
-                    <div className="md:w-1/3 aspect-video md:aspect-square overflow-hidden">
-                      <img
-                        src={post.cover_image}
-                        alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Content */}
-                  <div className={`p-6 flex-1 ${post.cover_image ? '' : 'md:w-full'}`}>
-                    <div className="space-y-4">
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors mb-2">
-                          {post.title}
-                        </h2>
-                        <p className="text-gray-600 line-clamp-2">
-                          {post.excerpt}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-sm text-gray-500">
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1">
-                            <User className="w-4 h-4" />
-                            <span>{post.profiles?.full_name || 'Usuario'}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>{formatDate(post.created_at)}</span>
-                          </div>
-                        </div>
-                        
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => onReadPost(post)}
-                          className="gap-2 group-hover:bg-blue-50 group-hover:text-blue-600"
-                        >
-                          <Eye className="w-4 h-4" />
-                          Leer más
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+        <>
+          {/* Bento Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 auto-rows-[300px]">
+            {displayedPosts.map((post, index) => {
+              // Bento layout patterns
+              let variant: 'large' | 'medium' | 'small' = 'small'
+              let className = ''
 
-      {/* Load More / Pagination would go here if needed */}
-      {sortedPosts.length > 0 && (
-        <div className="text-center pt-8">
-          <p className="text-sm text-gray-500">
-            {sortedPosts.length === 1 ? '1 post mostrado' : `${sortedPosts.length} posts mostrados`}
-          </p>
-        </div>
+              // Every 12 posts, make the first one large
+              if (index % 12 === 0) {
+                variant = 'large'
+                className = 'md:col-span-2 md:row-span-2'
+              }
+              // Every 6 posts (but not large), make medium
+              else if (index % 6 === 1 || index % 6 === 2) {
+                variant = 'medium'
+                className = 'lg:col-span-2'
+              }
+
+              return (
+                <PostCard
+                  key={post.id}
+                  post={post}
+                  variant={variant}
+                  onReadPost={onReadPost}
+                  className={className}
+                />
+              )
+            })}
+          </div>
+
+          {/* Loading Trigger & Progress */}
+          <div ref={loadingRef}>
+            <LoadingProgress
+              isLoading={infiniteLoading}
+              progress={progress}
+              hasMoreItems={hasMoreItems}
+              onScrollToTop={scrollToTop}
+            />
+          </div>
+        </>
       )}
     </div>
   )
