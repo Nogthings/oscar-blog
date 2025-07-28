@@ -12,9 +12,13 @@ import { LogOut, User, PenTool } from 'lucide-react'
 
 interface HeaderProps {
   onCreatePost?: () => void
+  onLogin?: () => void
+  onNavigateHome?: () => void
+  onNavigatePosts?: () => void
+  onNavigateAbout?: () => void
 }
 
-export function Header({ onCreatePost }: HeaderProps) {
+export function Header({ onCreatePost, onLogin, onNavigateHome, onNavigatePosts, onNavigateAbout }: HeaderProps) {
   const { user, signOut } = useAuth()
 
   const handleSignOut = async () => {
@@ -34,15 +38,24 @@ export function Header({ onCreatePost }: HeaderProps) {
           </div>
 
           <nav className="hidden md:flex items-center space-x-6">
-            <a href="#" className="text-sm font-medium hover:text-primary transition-colors">
+            <button 
+              onClick={onNavigateHome}
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Inicio
-            </a>
-            <a href="#" className="text-sm font-medium hover:text-primary transition-colors">
+            </button>
+            <button 
+              onClick={onNavigatePosts}
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Posts
-            </a>
-            <a href="#" className="text-sm font-medium hover:text-primary transition-colors">
+            </button>
+            <button 
+              onClick={onNavigateAbout}
+              className="text-sm font-medium hover:text-primary transition-colors"
+            >
               Acerca de
-            </a>
+            </button>
           </nav>
 
           <div className="flex items-center space-x-4">
@@ -92,7 +105,7 @@ export function Header({ onCreatePost }: HeaderProps) {
                 </DropdownMenu>
               </>
             ) : (
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={onLogin}>
                 Iniciar Sesión
               </Button>
             )}

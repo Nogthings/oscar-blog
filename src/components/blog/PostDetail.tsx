@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { MarkdownDisplay } from '@/components/ui/markdown-preview'
 import { Calendar, User, ArrowLeft, Edit, Trash2 } from 'lucide-react'
 
 type Post = {
@@ -11,6 +12,7 @@ type Post = {
   slug: string
   author_id: string
   published: boolean
+  cover_image?: string
   created_at: string
   updated_at: string
   profiles?: {
@@ -52,6 +54,17 @@ export function PostDetail({ post, onBack, onEdit, onDelete, isOwner }: PostDeta
       </div>
 
       <Card>
+        {/* Cover Image */}
+        {post.cover_image && (
+          <div className="w-full h-64 md:h-80 overflow-hidden">
+            <img
+              src={post.cover_image}
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
         <CardHeader className="space-y-4">
           <div className="flex items-start justify-between">
             <div className="flex-1">
@@ -113,10 +126,8 @@ export function PostDetail({ post, onBack, onEdit, onDelete, isOwner }: PostDeta
         </CardHeader>
 
         <CardContent>
-          <div className="prose prose-gray dark:prose-invert max-w-none">
-            <div className="whitespace-pre-wrap text-base leading-relaxed">
-              {post.content}
-            </div>
+          <div className="max-w-none">
+            <MarkdownDisplay source={post.content} />
           </div>
         </CardContent>
       </Card>

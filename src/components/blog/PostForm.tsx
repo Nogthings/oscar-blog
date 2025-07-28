@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Button } from '@/components/ui/button'
@@ -7,12 +7,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { MarkdownEditorCustom } from '@/components/ui/markdown-editor-custom'
 
 const postSchema = z.object({
   title: z.string().min(1, 'El título es requerido').max(200, 'El título es muy largo'),
   excerpt: z.string().min(1, 'El resumen es requerido').max(300, 'El resumen es muy largo'),
   content: z.string().min(1, 'El contenido es requerido'),
   slug: z.string().min(1, 'El slug es requerido').regex(/^[a-z0-9-]+$/, 'El slug solo puede contener letras minúsculas, números y guiones'),
+  cover_image: z.string().optional().refine((val) => !val || z.string().url().safeParse(val).success, {
+    message: 'Debe ser una URL válida o estar vacío'
+  }),
 })
 
 type PostForm = z.infer<typeof postSchema>
@@ -24,6 +28,7 @@ type Post = {
   slug: string
   author_id: string
   published: boolean
+  cover_image?: string
   created_at: string
   updated_at: string
 }
@@ -44,6 +49,7 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
     formState: { errors },
     setValue,
     watch,
+    control,
   } = useForm<PostForm>({
     resolver: zodResolver(postSchema),
     defaultValues: post ? {
@@ -51,6 +57,7 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
       excerpt: post.excerpt,
       content: post.content,
       slug: post.slug,
+      cover_image: post.cover_image || '',
     } : undefined,
   })
 
@@ -72,9 +79,14 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
   }, [title, setValue, post])
 
   const handleFormSubmit = async (data: PostForm, published: boolean) => {
+    console.log('Form submitting with data:', data)
     setIsSaving(true)
     try {
       await onSubmit(data, published)
+      console.log('Form submitted successfully')
+    } catch (error) {
+      console.error('Form submission error:', error)
+      throw error
     } finally {
       setIsSaving(false)
     }
@@ -118,6 +130,23 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="cover_image">Imagen de Portada (URL)</Label>
+            <Input
+              id="cover_image"
+              type="url"
+              placeholder="https://ejemplo.com/imagen.jpg"
+              {...register('cover_image')}
+              disabled={isSaving || isLoading}
+            />
+            {errors.cover_image && (
+              <p className="text-sm text-red-600">{errors.cover_image.message}</p>
+            )}
+            <p className="text-sm text-gray-500">
+              💡 Puedes usar servicios como Unsplash, Pexels, o subir a Imgur para obtener URLs de imágenes
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="excerpt">Resumen *</Label>
             <Textarea
               id="excerpt"
@@ -132,17 +161,33 @@ export function PostForm({ post, onSubmit, onCancel, isLoading }: PostFormProps)
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="content">Contenido *</Label>
-            <Textarea
-              id="content"
-              placeholder="Escribe el contenido de tu post aquí..."
-              rows={12}
-              {...register('content')}
-              disabled={isSaving || isLoading}
+            <Label htmlFor="content">Contenido * (Markdown)</Label>
+            <Controller
+              name="content"
+              control={control}
+              render={({ field }) => (
+                <MarkdownEditorCustom
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Escribe el contenido de tu post aquí usando Markdown..."
+                  height={500}
+                  disabled={isSaving || isLoading}
+                />
+              )}
             />
             {errors.content && (
               <p className="text-sm text-red-600">{errors.content.message}</p>
             )}
+            <div className="text-sm text-gray-500 mt-2">
+              <p>💡 <strong>Tip:</strong> Puedes usar Markdown para dar formato a tu contenido:</p>
+              <ul className="list-disc list-inside mt-1 space-y-0.5">
+                <li><code>**texto**</code> para <strong>negrita</strong></li>
+                <li><code>*texto*</code> para <em>cursiva</em></li>
+                <li><code># Título</code> para encabezados</li>
+                <li><code>- item</code> para listas</li>
+                <li><code>[enlace](url)</code> para enlaces</li>
+              </ul>
+            </div>
           </div>
 
           <div className="flex gap-4 pt-4">

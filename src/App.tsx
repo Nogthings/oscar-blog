@@ -2,9 +2,13 @@ import { useState } from 'react'
 import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { Layout } from '@/components/layout/Layout'
+import { HomePage } from '@/components/home/HomePage'
 import { PostList } from '@/components/blog/PostList'
 import { PostForm } from '@/components/blog/PostForm'
 import { PostDetail } from '@/components/blog/PostDetail'
+import { PostsPage } from '@/components/pages/PostsPage'
+import { AboutPage } from '@/components/pages/AboutPage'
+import { ProfileDebugger } from '@/components/debug/ProfileDebugger'
 import { usePosts } from '@/hooks/usePosts'
 
 type Post = {
@@ -15,6 +19,7 @@ type Post = {
   slug: string
   author_id: string
   published: boolean
+  cover_image?: string
   created_at: string
   updated_at: string
   profiles?: {
@@ -23,7 +28,7 @@ type Post = {
   }
 }
 
-type View = 'home' | 'create' | 'edit' | 'detail'
+type View = 'home' | 'posts' | 'about' | 'create' | 'edit' | 'detail' | 'login'
 
 function BlogApp() {
   const { user, loading: authLoading } = useAuth()
@@ -68,7 +73,7 @@ function BlogApp() {
   }
 
   const handlePostSubmit = async (
-    data: { title: string; excerpt: string; content: string; slug: string },
+    data: { title: string; excerpt: string; content: string; slug: string; cover_image?: string },
     published: boolean
   ) => {
     try {
@@ -88,6 +93,21 @@ function BlogApp() {
     setSelectedPost(null)
   }
 
+  const handleNavigateHome = () => {
+    setCurrentView('home')
+    setSelectedPost(null)
+  }
+
+  const handleNavigatePosts = () => {
+    setCurrentView('posts')
+    setSelectedPost(null)
+  }
+
+  const handleNavigateAbout = () => {
+    setCurrentView('about')
+    setSelectedPost(null)
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -99,12 +119,19 @@ function BlogApp() {
     )
   }
 
-  if (!user) {
+  // Show auth modal only for protected views when not authenticated
+  if (!user && (currentView === 'create' || currentView === 'edit')) {
     return <AuthModal />
   }
 
   return (
-    <Layout onCreatePost={handleCreatePost}>
+    <Layout 
+      onCreatePost={user ? handleCreatePost : undefined}
+      onLogin={() => setCurrentView('login')}
+      onNavigateHome={handleNavigateHome}
+      onNavigatePosts={handleNavigatePosts}
+      onNavigateAbout={handleNavigateAbout}
+    >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
           <div className="mb-6 p-4 text-red-600 bg-red-50 border border-red-200 rounded-md">
@@ -113,28 +140,20 @@ function BlogApp() {
         )}
 
         {currentView === 'home' && (
-          <div>
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                Bienvenido al Blog
-              </h1>
-              <p className="text-lg text-gray-600">
-                Descubre artículos increíbles de nuestra comunidad
-              </p>
-            </div>
-            
-            <PostList
-              posts={posts}
-              onRead={handleViewPost}
-              onEdit={handleEditPost}
-              onDelete={handleDeletePost}
-              currentUserId={user?.id}
-              loading={postsLoading}
-            />
-          </div>
+          <HomePage
+            posts={posts}
+            onReadPost={handleViewPost}
+            onCreatePost={user ? handleCreatePost : () => setCurrentView('login')}
+            loading={postsLoading}
+            isAuthenticated={!!user}
+          />
         )}
 
-        {(currentView === 'create' || currentView === 'edit') && (
+        {currentView === 'login' && !user && (
+          <AuthModal onSuccess={() => setCurrentView('home')} />
+        )}
+
+        {(currentView === 'create' || currentView === 'edit') && user && (
           <PostForm
             post={selectedPost || undefined}
             onSubmit={handlePostSubmit}
@@ -142,12 +161,29 @@ function BlogApp() {
           />
         )}
 
+        {currentView === 'posts' && (
+          <PostsPage
+            posts={posts}
+            onReadPost={handleViewPost}
+            onCreatePost={user ? handleCreatePost : () => setCurrentView('login')}
+            loading={postsLoading}
+            isAuthenticated={!!user}
+          />
+        )}
+
+        {currentView === 'about' && (
+          <AboutPage
+            onCreatePost={user ? handleCreatePost : () => setCurrentView('login')}
+            isAuthenticated={!!user}
+          />
+        )}
+
         {currentView === 'detail' && selectedPost && (
           <PostDetail
             post={selectedPost}
             onBack={handleBackToHome}
-            onEdit={handleEditPost}
-            onDelete={handleDeletePost}
+            onEdit={user ? handleEditPost : undefined}
+            onDelete={user ? handleDeletePost : undefined}
             isOwner={user?.id === selectedPost.author_id}
           />
         )}

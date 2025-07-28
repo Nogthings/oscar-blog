@@ -10,6 +10,7 @@ type Post = {
   slug: string
   author_id: string
   published: boolean
+  cover_image?: string
   created_at: string
   updated_at: string
   profiles?: {
@@ -26,6 +27,7 @@ type PostInsert = {
   slug: string
   author_id: string
   published?: boolean
+  cover_image?: string
   created_at?: string
   updated_at?: string
 }
@@ -38,6 +40,7 @@ type PostUpdate = {
   slug?: string
   author_id?: string
   published?: boolean
+  cover_image?: string
   created_at?: string
   updated_at?: string
 }
@@ -66,6 +69,9 @@ export function usePosts() {
         .order('created_at', { ascending: false })
 
       if (error) throw error
+
+      console.log('Fetched posts:', data)
+      console.log('First post profile:', data?.[0]?.profiles)
 
       setPosts(data || [])
     } catch (error) {
@@ -105,16 +111,36 @@ export function usePosts() {
   }
 
   const createPost = async (postData: Omit<PostInsert, 'author_id'>) => {
+    console.log('Creating post with data:', postData)
     if (!user) throw new Error('User not authenticated')
+
+    // First, ensure the user has a profile
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id, full_name')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) {
+      throw new Error('User profile not found. Please refresh and try again.')
+    }
+
+    // Clean the data - remove empty cover_image
+    const cleanPostData = { ...postData }
+    if (cleanPostData.cover_image === '' || cleanPostData.cover_image === null) {
+      delete cleanPostData.cover_image
+    }
+
+    const insertData = {
+      ...cleanPostData,
+      author_id: user.id,
+    }
+
+    console.log('Inserting to database:', insertData)
 
     const { data, error } = await supabase
       .from('posts')
-      .insert([
-        {
-          ...postData,
-          author_id: user.id,
-        },
-      ])
+      .insert([insertData])
       .select(`
         *,
         profiles (
@@ -124,16 +150,28 @@ export function usePosts() {
       `)
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Database insert error:', error)
+      throw error
+    }
 
+    console.log('Post created successfully:', data)
     setPosts((prev) => [data, ...prev])
     return data
   }
 
   const updatePost = async (id: string, postData: PostUpdate) => {
+    console.log('Updating post with data:', { id, postData })
+    
+    // Clean the data - remove empty cover_image
+    const cleanPostData = { ...postData }
+    if (cleanPostData.cover_image === '' || cleanPostData.cover_image === null) {
+      delete cleanPostData.cover_image
+    }
+    
     const { data, error } = await supabase
       .from('posts')
-      .update(postData)
+      .update(cleanPostData)
       .eq('id', id)
       .select(`
         *,
@@ -144,8 +182,12 @@ export function usePosts() {
       `)
       .single()
 
-    if (error) throw error
+    if (error) {
+      console.error('Database update error:', error)
+      throw error
+    }
 
+    console.log('Post updated successfully:', data)
     setPosts((prev) =>
       prev.map((post) => (post.id === id ? data : post))
     )

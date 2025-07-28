@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { ensureUserProfile } from '@/utils/profileUtils'
 
 // Using any for now to avoid import issues
 type User = any
@@ -40,30 +41,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Create profile if user just signed in and doesn't have one
       if (event === 'SIGNED_IN' && session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', session.user.id)
-          .single()
-
-        if (!profile) {
-          // Create profile if it doesn't exist
-          const fullName = pendingUserData?.fullName || session.user.user_metadata?.full_name || session.user.email || 'Usuario'
-          const { error } = await supabase
-            .from('profiles')
-            .insert([
-              {
-                id: session.user.id,
-                username: session.user.email?.split('@')[0] || 'user',
-                full_name: fullName,
-              },
-            ])
-          
-          if (error) {
-            console.error('Error creating profile:', error)
-          } else {
-            setPendingUserData(null) // Clear pending data after successful profile creation
-          }
+        try {
+          const fullName = pendingUserData?.fullName || session.user.user_metadata?.full_name || null
+          await ensureUserProfile(session.user.id, session.user.email || '', fullName)
+          setPendingUserData(null) // Clear pending data after successful profile creation
+        } catch (error) {
+          console.error('Error ensuring user profile:', error)
         }
       }
     })

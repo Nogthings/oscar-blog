@@ -118,3 +118,80 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Markdown Editor Styles */
+.markdown-editor .w-md-editor {
+  background-color: transparent;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.markdown-editor .w-md-editor-text-pre,
+.markdown-editor .w-md-editor-text-input,
+.markdown-editor .w-md-editor-text-textarea {
+  color: #374151 !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+.markdown-editor .w-md-editor.w-md-editor-focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 2px rgb(59 130 246 / 0.1) !important;
+}
+
+.markdown-editor .w-md-editor-toolbar {
+  border-bottom: 1px solid #e5e7eb !important;
+  background-color: #f9fafb !important;
+}
+
+.markdown-editor .w-md-editor-toolbar-divider {
+  background-color: #e5e7eb !important;
+}
+
+.markdown-editor .w-md-editor-preview {
+  background-color: #ffffff !important;
+}
+
+/* Fullscreen Editor Fixes - Minimal approach */
+.w-md-editor-fullscreen {
+  z-index: 9999 !important;
+}
+
+/* Markdown Preview Styles */
+.markdown-preview {
+  line-height: 1.7;
+}
+
+.markdown-preview code {
+  font-family: 'Fira Code', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', 'Source Code Pro', monospace !important;
+}
+
+.markdown-preview pre {
+  font-family: 'Fira Code', 'SF Mono', Monaco, Inconsolata, 'Roboto Mono', 'Source Code Pro', monospace !important;
+}
+
+.markdown-preview blockquote {
+  font-style: italic;
+  border-left: 4px solid #3b82f6;
+  margin: 1rem 0;
+  padding-left: 1rem;
+  color: #6b7280;
+}
+
+.markdown-preview table {
+  border-collapse: collapse;
+  margin: 1rem 0;
+  width: 100%;
+}
+
+.markdown-preview th,
+.markdown-preview td {
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 1rem;
+  text-align: left;
+}
+
+.markdown-preview th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+}

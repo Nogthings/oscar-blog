@@ -17,9 +17,10 @@ type LoginForm = z.infer<typeof loginSchema>
 
 interface LoginFormProps {
   onToggleMode: () => void
+  onSuccess?: () => void
 }
 
-export function LoginForm({ onToggleMode }: LoginFormProps) {
+export function LoginForm({ onToggleMode, onSuccess }: LoginFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { signIn } = useAuth()
@@ -37,6 +38,7 @@ export function LoginForm({ onToggleMode }: LoginFormProps) {
       setIsLoading(true)
       setError(null)
       await signIn(data.email, data.password)
+      onSuccess?.()
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Error al iniciar sesión')
     } finally {

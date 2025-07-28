@@ -22,9 +22,10 @@ type SignUpForm = z.infer<typeof signUpSchema>
 
 interface SignUpFormProps {
   onToggleMode: () => void
+  onSuccess?: () => void
 }
 
-export function SignUpForm({ onToggleMode }: SignUpFormProps) {
+export function SignUpForm({ onToggleMode, onSuccess }: SignUpFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)

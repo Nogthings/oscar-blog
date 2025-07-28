@@ -11,6 +11,7 @@ type Post = {
   slug: string
   author_id: string
   published: boolean
+  cover_image?: string
   created_at: string
   updated_at: string
   profiles?: {
@@ -28,6 +29,14 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, onRead, onEdit, onDelete, isOwner }: PostCardProps) {
+  // Debug logging
+  console.log('PostCard received post:', {
+    id: post.id,
+    title: post.title,
+    author_id: post.author_id,
+    profiles: post.profiles
+  })
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-ES', {
       year: 'numeric',
