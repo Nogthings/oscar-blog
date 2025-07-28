@@ -25,7 +25,7 @@ interface SignUpFormProps {
   onSuccess?: () => void
 }
 
-export function SignUpForm({ onToggleMode, onSuccess }: SignUpFormProps) {
+export function SignUpForm({ onToggleMode }: SignUpFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)

@@ -8,9 +8,11 @@ interface LayoutProps {
   onNavigateHome?: () => void
   onNavigatePosts?: () => void
   onNavigateAbout?: () => void
+  onNavigatePrivacy?: () => void
+  onNavigateTerms?: () => void
 }
 
-export function Layout({ children, onCreatePost, onLogin, onNavigateHome, onNavigatePosts, onNavigateAbout }: LayoutProps) {
+export function Layout({ children, onCreatePost, onLogin, onNavigateHome, onNavigatePosts, onNavigateAbout, onNavigatePrivacy, onNavigateTerms }: LayoutProps) {
   return (
     <div className="min-h-screen flex flex-col">
       <Header 
@@ -23,7 +25,10 @@ export function Layout({ children, onCreatePost, onLogin, onNavigateHome, onNavi
       <main className="flex-1">
         {children}
       </main>
-      <Footer />
+      <Footer 
+        onNavigatePrivacy={onNavigatePrivacy}
+        onNavigateTerms={onNavigateTerms}
+      />
     </div>
   )
 }

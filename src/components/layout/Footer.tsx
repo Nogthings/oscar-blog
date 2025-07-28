@@ -1,4 +1,9 @@
-export function Footer() {
+interface FooterProps {
+  onNavigatePrivacy?: () => void
+  onNavigateTerms?: () => void
+}
+
+export function Footer({ onNavigatePrivacy, onNavigateTerms }: FooterProps) {
   return (
     <footer className="border-t bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -9,18 +14,18 @@ export function Footer() {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <a
-              href="#"
+            <button
+              onClick={onNavigatePrivacy}
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               Política de Privacidad
-            </a>
-            <a
-              href="#"
+            </button>
+            <button
+              onClick={onNavigateTerms}
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               Términos de Uso
-            </a>
+            </button>
           </div>
         </div>
       </div>

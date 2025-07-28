@@ -3,12 +3,13 @@ import { AuthProvider, useAuth } from '@/contexts/AuthContext'
 import { AuthModal } from '@/components/auth/AuthModal'
 import { Layout } from '@/components/layout/Layout'
 import { HomePage } from '@/components/home/HomePage'
-import { PostList } from '@/components/blog/PostList'
 import { PostForm } from '@/components/blog/PostForm'
 import { PostDetail } from '@/components/blog/PostDetail'
 import { PostsPage } from '@/components/pages/PostsPage'
 import { AboutPage } from '@/components/pages/AboutPage'
-import { ProfileDebugger } from '@/components/debug/ProfileDebugger'
+import { TermsPage } from '@/components/pages/TermsPage'
+import { PrivacyPage } from '@/components/pages/PrivacyPage'
+import { CookieConsent, useCookieConsent } from '@/components/ui/CookieConsent'
 import { usePosts } from '@/hooks/usePosts'
 
 type Post = {
@@ -28,7 +29,7 @@ type Post = {
   }
 }
 
-type View = 'home' | 'posts' | 'about' | 'create' | 'edit' | 'detail' | 'login'
+type View = 'home' | 'posts' | 'about' | 'create' | 'edit' | 'detail' | 'login' | 'terms' | 'privacy'
 
 function BlogApp() {
   const { user, loading: authLoading } = useAuth()
@@ -40,6 +41,7 @@ function BlogApp() {
     deletePost,
     error 
   } = usePosts()
+  const { hasConsent } = useCookieConsent()
 
   const [currentView, setCurrentView] = useState<View>('home')
   const [selectedPost, setSelectedPost] = useState<Post | null>(null)
@@ -108,6 +110,31 @@ function BlogApp() {
     setSelectedPost(null)
   }
 
+  const handleNavigatePrivacy = () => {
+    setCurrentView('privacy')
+    setSelectedPost(null)
+  }
+
+  const handleNavigateTerms = () => {
+    setCurrentView('terms')
+    setSelectedPost(null)
+  }
+
+  const handleCookieAcceptAll = () => {
+    console.log('All cookies accepted')
+    // Enable all tracking/analytics here
+  }
+
+  const handleCookieAcceptSelected = (preferences: any) => {
+    console.log('Cookie preferences saved:', preferences)
+    // Apply selected cookie preferences
+  }
+
+  const handleCookieReject = () => {
+    console.log('Only essential cookies accepted')
+    // Disable all non-essential tracking
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -131,6 +158,8 @@ function BlogApp() {
       onNavigateHome={handleNavigateHome}
       onNavigatePosts={handleNavigatePosts}
       onNavigateAbout={handleNavigateAbout}
+      onNavigatePrivacy={handleNavigatePrivacy}
+      onNavigateTerms={handleNavigateTerms}
     >
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {error && (
@@ -178,6 +207,18 @@ function BlogApp() {
           />
         )}
 
+        {currentView === 'terms' && (
+          <TermsPage
+            onNavigateHome={handleNavigateHome}
+          />
+        )}
+
+        {currentView === 'privacy' && (
+          <PrivacyPage
+            onNavigateHome={handleNavigateHome}
+          />
+        )}
+
         {currentView === 'detail' && selectedPost && (
           <PostDetail
             post={selectedPost}
@@ -188,6 +229,15 @@ function BlogApp() {
           />
         )}
       </div>
+      
+      {/* Cookie Consent Banner */}
+      {!hasConsent && (
+        <CookieConsent
+          onAcceptAll={handleCookieAcceptAll}
+          onAcceptSelected={handleCookieAcceptSelected}
+          onReject={handleCookieReject}
+        />
+      )}
     </Layout>
   )
 }
